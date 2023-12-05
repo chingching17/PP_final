@@ -5,10 +5,10 @@
 
 using namespace std;
 
-void generateMatrix(int row, int col, int matrixSize, int percent, ofstream &file) {
+void generateMatrix(int row, int col, int percent, ofstream &file) {
     for (int i = 0; i < row; ++i) {
         for (int j = 0; j < col; ++j) {
-            int random = rand() % matrixSize + 5; // Generate a random number between 5 and matrixSize
+            int random = rand() % 100 + 5; // Generate a random number between 1 and 100
             if (random <= percent) {
                 file << "1 ";
             } else {
@@ -24,14 +24,15 @@ void generateMatrix(int row, int col, int matrixSize, int percent, ofstream &fil
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 4) {
-        cerr << "Usage: " << argv[0] << " <number_of_data> <matrix_size> <percent_1>" << endl;
+    if (argc != 5) {
+        cerr << "Usage: " << argv[0] << " <number_of_data> <matrix_size> <percent_1> <mode>" << endl;
         return 1;
     }
 
     int numData = atoi(argv[1]);
     int matrixSize = atoi(argv[2]);
     int percent_for_1 = atoi(argv[3]);
+    int mode = atoi(argv[4]);
 
     srand(time(0)); // Seed for random number generation
 
@@ -43,11 +44,18 @@ int main(int argc, char *argv[]) {
     }
 
     for (int i = 0; i < numData; ++i) {
-        int row = rand() % matrixSize + 1;
-        int col = rand() % matrixSize + 1;
-        outputFile << row << " " << col << " " << "1" << endl;
-        generateMatrix(row, col, matrixSize, percent_for_1, outputFile);
-        outputFile << endl;
+        if (mode == 1){
+            int row = rand() % matrixSize + 1;
+            int col = rand() % matrixSize + 1;
+            outputFile << row << " " << col << " " << "1" << endl;
+            generateMatrix(row, col, percent_for_1, outputFile);
+            outputFile << endl;
+        }
+        if(mode == 2){
+            outputFile << matrixSize << " " << matrixSize << " " << "1" << endl;
+            generateMatrix(matrixSize, matrixSize, percent_for_1, outputFile);
+            outputFile << endl;
+        }
     }
 
     outputFile.close();
