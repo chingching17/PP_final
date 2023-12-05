@@ -46,6 +46,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    outputFile << numData << endl;
+
     for (int i = 0; i < numData; ++i) {
         if (mode == 1){
             int row = rand() % matrixSize + 1;
