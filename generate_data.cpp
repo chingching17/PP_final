@@ -10,7 +10,7 @@ void generateMatrix(int row, int col, int percent, ofstream &file) {
         for (int j = 0; j < col; ++j) {
             int random = rand() % 100 + 1; // Generate a random number between 1 and 100
             if (random <= percent) {
-                file << "1 ";
+                file << rand()%1000 << ' ';
             } else {
                 file << "0 ";
             }
