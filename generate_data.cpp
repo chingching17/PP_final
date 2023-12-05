@@ -8,7 +8,7 @@ using namespace std;
 void generateMatrix(int row, int col, int percent, ofstream &file) {
     for (int i = 0; i < row; ++i) {
         for (int j = 0; j < col; ++j) {
-            int random = rand() % 100 + 5; // Generate a random number between 1 and 100
+            int random = rand() % 100 + 1; // Generate a random number between 1 and 100
             if (random <= percent) {
                 file << "1 ";
             } else {
