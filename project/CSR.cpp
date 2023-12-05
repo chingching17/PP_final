@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <fstream>
+
 using namespace std;
 
 typedef std::vector<int> vi;
@@ -25,7 +27,6 @@ void printMatrix(const matrix& M)
 // with some decoration.
 void printVector(const vi& V, char* msg)
 {
-
 	cout << msg << "[ ";
 	for_each(V.begin(), V.end(), [](int a) {
 		cout << a << " ";
@@ -34,7 +35,7 @@ void printVector(const vi& V, char* msg)
 }
 
 // Generate the three vectors A, IA, JA 
-void sparesify(const matrix& M)
+void sparesify(const matrix& M, fstream &output)
 {
 	int m = M.size();
 	int n = M[0].size(), i, j;
@@ -57,23 +58,53 @@ void sparesify(const matrix& M)
 		IA.push_back(NNZ);
 	}
 
-	printMatrix(M);
-	printVector(A, (char*)"A = ");
-	printVector(IA, (char*)"IA = ");
-	printVector(JA, (char*)"JA = ");
+	// printMatrix(M);
+	// printVector(A, (char*)"A = ");
+	// printVector(IA, (char*)"IA = ");
+	// printVector(JA, (char*)"JA = ");
+	
+
+	output << "A = [ ";
+	for(auto n:A)
+		output << n << " ";
+	output << "]" << endl;
+
+	output << "IA = [ ";
+	for(auto n:IA)
+		output << n << " ";
+	output << "]" << endl;
+
+	output << "JA = [ ";
+	for(auto n:JA)
+		output << n << " ";
+	output << "]" << endl;
 }
 
 // Driver code
 int main()
 {
-	matrix M = {
-		{ 0, 0, 0, 0, 1 },
-		{ 5, 8, 0, 0, 0 },
-		{ 0, 0, 3, 0, 0 },
-		{ 0, 6, 0, 0, 1 },
-	};
+	matrix M;
+	fstream output;
+	output.open("matrix_csr.txt");
 
-	sparesify(M);
+	int n,m,l,tmp;
+	cin >> n >> m >> l;
+	output << n << " " << m << " " << l << endl;
+	M.resize(n);
+	for(int i=0; i<n; i++){
+		for(int j=0; j<m; j++){
+			cin >> tmp;
+			M[i].push_back(tmp);
+		}
+	}
 
+	sparesify(M,output);
+
+	for(int i=0; i<m; i++){
+		cin >> tmp;
+		output << tmp << endl;
+	}
+
+	output.close();
 	return 0;
 }
