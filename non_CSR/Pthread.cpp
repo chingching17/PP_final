@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <pthread.h>
+#include <chrono>
 
 using namespace std;
 
@@ -80,6 +81,8 @@ void destruct_matrices(int *a_mat, int *b_mat) {
 }
 
 int main() {
+    ios_base::sync_with_stdio(false);
+    cin.tie(0);    
     int n, m, l;
     int *a_mat, *b_mat;
     construct_matrices(&n, &m, &l, &a_mat, &b_mat);
@@ -87,18 +90,19 @@ int main() {
     int *result_mat = new int[n * l];
 
     int num_threads = 4;  // Adjust the number of threads as needed
-
+    auto t1 = std::chrono::steady_clock::now();
     matrix_multiply_parallel(n, m, l, a_mat, b_mat, result_mat, num_threads);
-
-    for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < l; ++j) {
-            printf("%d ", result_mat[i * l + j]);
-        }
-        printf("\n");
-    }
+    auto t2 = std::chrono::steady_clock::now();
+    // for (int i = 0; i < n; ++i) {
+    //     for (int j = 0; j < l; ++j) {
+    //         printf("%d ", result_mat[i * l + j]);
+    //     }
+    //     printf("\n");
+    // }
 
     destruct_matrices(a_mat, b_mat);
     delete[] result_mat;
-
+    
+    cout << chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << endl;
     return 0;
 }
