@@ -3,6 +3,7 @@
 #include <string>
 #include <chrono>
 #include <vector>
+#include <omp.h>
 
 using namespace std;
 
@@ -68,7 +69,7 @@ void matrix_multiply(const int n, const int m, const int l, const int A_size, co
             result_mat[i * l + j] = 0;
         }
     }
-
+    #pragma omp parallel for
     for(int i=1; i<IA_size; i++){
         for(int j=IA[i-1]; j<IA[i]; j++){
             result_mat[i-1]+=A[j]*b_mat[JA[j]];

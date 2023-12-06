@@ -3,8 +3,19 @@
 #include <string>
 #include <chrono>
 #include <vector>
+#include <pthread.h>
 
 using namespace std;
+
+struct ThreadData {
+    int* result_mat;
+    const int* A;
+    const int* IA;
+    const int* JA;
+    const int* b_mat;
+    int start;
+    int end;
+};
 
 void construct_matrices(int *n_ptr, int *m_ptr, int *l_ptr, int *A_size, int *IA_size, int *JA_size,
                         int **A, int **IA, int **JA, int **b_mat_ptr){
@@ -56,23 +67,46 @@ void construct_matrices(int *n_ptr, int *m_ptr, int *l_ptr, int *A_size, int *IA
             cin >> (*b_mat_ptr)[i * *l_ptr + j];
         }
     }
+}
 
+void* matrix_multiply_parallel(void* arg) {
+    ThreadData* data = static_cast<ThreadData*>(arg);
+
+    for (int i = data->start; i < data->end; i++){
+        for(int j=data->IA[i]; j<data->IA[i+1]; j++){
+            data->result_mat[i] += data->A[j] * data->b_mat[data->JA[j]];
+        }
+    }
+
+    pthread_exit(NULL);
 }
 
 void matrix_multiply(const int n, const int m, const int l, const int A_size, const int IA_size, const int JA_size,
                      const int *A, const int *IA, const int *JA, const int *b_mat){
     int *result_mat = new int[n * l];
-
+    int num_threads=4;
+    int chunk_size = (IA_size-1) / num_threads;
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < l; ++j) {
             result_mat[i * l + j] = 0;
         }
     }
+    pthread_t threads[num_threads];
+    vector<ThreadData> threadDataArray(num_threads);
 
-    for(int i=1; i<IA_size; i++){
-        for(int j=IA[i-1]; j<IA[i]; j++){
-            result_mat[i-1]+=A[j]*b_mat[JA[j]];
-        }
+    for (int i = 0; i < num_threads; ++i) {
+        threadDataArray[i].result_mat = result_mat;
+        threadDataArray[i].A = A;
+        threadDataArray[i].IA = IA;
+        threadDataArray[i].JA = JA;
+        threadDataArray[i].b_mat = b_mat;
+        threadDataArray[i].start = i * chunk_size;
+        threadDataArray[i].end = (i == num_threads - 1) ? IA_size : (i + 1) * chunk_size;
+        pthread_create(&threads[i], NULL, matrix_multiply_parallel, &threadDataArray[i]);
+    }
+
+    for (int i = 0; i < num_threads; ++i) {
+        pthread_join(threads[i], NULL);
     }
 
     for (int i = 0; i < n; ++i) {
