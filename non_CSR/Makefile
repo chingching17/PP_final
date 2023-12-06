@@ -1,4 +1,4 @@
-serial:
+nonCSR:
 	g++ -o serial serial.cpp; g++ -o Pthread Pthread.cpp -lpthread; g++ -fopenmp -o OpenMP OpenMP.cpp; mpicxx -o MPI MPI.cpp;
 
 CSR:
