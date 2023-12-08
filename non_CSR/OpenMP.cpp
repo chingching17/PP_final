@@ -62,14 +62,17 @@ void destruct_matrices(int *a_mat, int *b_mat){
 int main () {
     ios_base::sync_with_stdio(false);
     cin.tie(0);    
-    int n, m, l;
-    int *a_mat, *b_mat;
-    construct_matrices(&n, &m, &l, &a_mat, &b_mat);
-    auto t1 = std::chrono::steady_clock::now();
-    matrix_multiply(n, m, l, a_mat, b_mat);
-    auto t2 = std::chrono::steady_clock::now();
-    destruct_matrices(a_mat, b_mat);
-    
-    cout << chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << endl;
+    int num;
+    cin >> num;
+    for(int i=0; i<num; i++){
+        int n, m, l;
+        int *a_mat, *b_mat;
+        construct_matrices(&n, &m, &l, &a_mat, &b_mat);
+        auto t1 = std::chrono::steady_clock::now();
+        matrix_multiply(n, m, l, a_mat, b_mat);
+        auto t2 = std::chrono::steady_clock::now();
+        destruct_matrices(a_mat, b_mat);
+        cout << chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << endl;
+    }
     return 0;
 }

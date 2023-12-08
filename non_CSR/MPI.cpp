@@ -127,23 +127,22 @@ void destruct_matrices(int *a_mat, int *b_mat){
 int main () {
     ios_base::sync_with_stdio(false);
     cin.tie(0);    
-    int n, m, l;
-    int *a_mat, *b_mat;
-
+    int num;
+    cin >> num;
     MPI_Init(NULL, NULL);
-    //double start_time = MPI_Wtime();
-
-    construct_matrices(&n, &m, &l, &a_mat, &b_mat);
-    auto t1 = std::chrono::steady_clock::now();
-    matrix_multiply(n, m, l, a_mat, b_mat);
-    auto t2 = std::chrono::steady_clock::now();
-    destruct_matrices(a_mat, b_mat);
-
-    //double end_time = MPI_Wtime();
+    for(int i=0; i<num; i++){
+        int n, m, l;
+        int *a_mat, *b_mat;
+        //double start_time = MPI_Wtime();
+        construct_matrices(&n, &m, &l, &a_mat, &b_mat);
+        auto t1 = std::chrono::steady_clock::now();
+        matrix_multiply(n, m, l, a_mat, b_mat);
+        auto t2 = std::chrono::steady_clock::now();
+        destruct_matrices(a_mat, b_mat);
+        //double end_time = MPI_Wtime();
+        //printf("MPI running time: %lf Seconds\n", end_time - start_time);
+        cout << chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << endl;
+    }
     MPI_Finalize();
-    //printf("MPI running time: %lf Seconds\n", end_time - start_time);
-    
-    cout << chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << endl;
-
     return 0;
 }
