@@ -35,7 +35,7 @@ void printVector(const vi& V, char* msg)
 }
 
 // Generate the three vectors A, IA, JA 
-void sparesify(const matrix& M, fstream &output)
+void sparesify(const matrix& M, ofstream &output)
 {
 	int m = M.size();
 	int n = M[0].size(), i, j;
@@ -84,27 +84,30 @@ void sparesify(const matrix& M, fstream &output)
 int main()
 {
 	matrix M;
-	fstream output;
+	ofstream output;
 	output.open("matrix_csr.txt");
-
-	int n,m,l,tmp;
-	cin >> n >> m >> l;
-	output << n << " " << m << " " << l << endl;
-	M.resize(n);
-	for(int i=0; i<n; i++){
-		for(int j=0; j<m; j++){
-			cin >> tmp;
-			M[i].push_back(tmp);
+	int num,n,m,l,tmp;
+	cin >> num;
+	output << num << endl;
+	for(int k=0; k<num; k++){
+		cin >> n >> m >> l;
+		output << n << " " << m << " " << l << endl;
+		M.clear();
+		M.resize(n);
+		for(int i=0; i<n; i++){
+			for(int j=0; j<m; j++){
+				cin >> tmp;
+				M[i].push_back(tmp);
+			}
 		}
+
+		sparesify(M,output);
+		for(int i=0; i<m; i++){
+			cin >> tmp;
+			output << tmp << endl;
+		}
+		output << endl;
 	}
-
-	sparesify(M,output);
-
-	for(int i=0; i<m; i++){
-		cin >> tmp;
-		output << tmp << endl;
-	}
-
 	output.close();
 	return 0;
 }
