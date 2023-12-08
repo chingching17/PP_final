@@ -76,12 +76,12 @@ void matrix_multiply(const int n, const int m, const int l, const int A_size, co
         }
     }
 
-    for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < l; ++j) {
-            printf("%d ",result_mat[i * l + j]);
-        }
-        printf("\n");
-    }
+    // for (int i = 0; i < n; ++i) {
+    //     for (int j = 0; j < l; ++j) {
+    //         printf("%d ",result_mat[i * l + j]);
+    //     }
+    //     printf("\n");
+    // }
     delete[] result_mat;
 }
 
@@ -95,14 +95,17 @@ void destruct_matrices(int *A, int *IA, int *JA, int *b_mat){
 int main () {
     ios_base::sync_with_stdio(false);
     cin.tie(0);    
-    int n, m, l, A_size, IA_size, JA_size;
-    int *A, *IA, *JA, *b_mat;
-    construct_matrices(&n, &m, &l, &A_size, &IA_size, &JA_size, &A, &IA, &JA, &b_mat);
-    auto t1 = std::chrono::steady_clock::now();
-    matrix_multiply(n, m, l, A_size, IA_size, JA_size, A, IA, JA, b_mat);
-    auto t2 = std::chrono::steady_clock::now();
-    destruct_matrices(A, IA, JA, b_mat);
-    
-    cout << chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << endl;
+    int num;
+    cin >> num;
+    for(int i=0; i<num; i++){
+        int n, m, l, A_size, IA_size, JA_size;
+        int *A, *IA, *JA, *b_mat;
+        construct_matrices(&n, &m, &l, &A_size, &IA_size, &JA_size, &A, &IA, &JA, &b_mat);
+        auto t1 = std::chrono::steady_clock::now();
+        matrix_multiply(n, m, l, A_size, IA_size, JA_size, A, IA, JA, b_mat);
+        auto t2 = std::chrono::steady_clock::now();
+        destruct_matrices(A, IA, JA, b_mat);
+        cout << chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << endl;
+    }
     return 0;
 }
