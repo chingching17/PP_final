@@ -2,6 +2,9 @@
 #include <fstream>
 #include <string>
 #include <chrono>
+#include <math.h>
+#include <cuda_runtime.h>
+#include "kernel.cu"
 using namespace std;
 
 
@@ -48,6 +51,7 @@ int main() {
         int N = n;
         auto t1 = std::chrono::steady_clock::now();
         matrix_multiply_parallel(a_mat, b_mat, result_mat, N);
+        cudaDeviceSynchronize();
         auto t2 = std::chrono::steady_clock::now();
         // for (int i = 0; i < n; ++i) {
         //     for (int j = 0; j < l; ++j) {
