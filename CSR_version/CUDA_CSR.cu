@@ -35,18 +35,23 @@ Note:
 return: none
 *********************************************************************
 */
-__global__ void gpu_matrix_mult(int *a,int *b, int *c, int m, int n, int k)
+__global__ void gpu_matrix_mult(int m, int n, int k, const int A_size, const int IA_size, const int JA_size, const int *A, const int *IA, const int *JA, const int *b_mat, int *c)
 { 
     int row = blockIdx.y * blockDim.y + threadIdx.y; 
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     int sum = 0;
     if( col < k && row < m) 
     {
-        for(int i = 0; i < n; i++) 
-        {
-            sum += a[row * n + i] * b[i * k + col];
+        // for(int i = 0; i < n; i++) 
+        // {
+        //     sum += a[row * n + i] * b[i * k + col];
+        // }
+        // c[row * k + col] = sum;
+        for(int i=1; i<IA_size; i++){
+            for(int j=IA[i-1]; j<IA[i]; j++){
+                c[i-1]+=A[j]*b_mat[JA[j]];
+            }
         }
-        c[row * k + col] = sum;
     }
 } 
 
@@ -246,12 +251,12 @@ int main(int argc, char const *argv[])
     int num;
     cin >> num;
     for(int i = 0; i < num; i++){
-        int m, n, k;
         /* Fixed seed for illustration */
         srand(3333);
         int m, n, k, A_size, IA_size, JA_size;
         int *A, *IA, *JA, *b_mat;
         construct_matrices(&m, &n, &k, &A_size, &IA_size, &JA_size, &A, &IA, &JA, &b_mat);
+        cout << "construct ok" << endl;
 
         // allocate memory in host RAM, h_cc is used to store CPU result
         int *h_a, *h_b, *h_c, *h_cc;
@@ -291,7 +296,8 @@ int main(int argc, char const *argv[])
         }
         else
         {
-            gpu_matrix_mult<<<dimGrid, dimBlock>>>(d_a, d_b, d_c, m, n, k);    
+            gpu_matrix_mult<<<dimGrid, dimBlock>>>(m, n, k,  A_size, IA_size, JA_size, A, IA, JA, d_b, d_c);  
+            cout << "mul ok" << endl;  
         }
         // Transefr results from device to host 
         cudaMemcpy(h_c, d_c, sizeof(int)*m*k, cudaMemcpyDeviceToHost);
