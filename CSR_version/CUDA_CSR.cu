@@ -275,16 +275,21 @@ int main(int argc, char const *argv[])
         srand(3333);
         int m, n, k, A_size, IA_size, JA_size;
         int *A, *IA, *JA, *b_mat;
-        construct_matrices(&m, &n, &k, &A_size, &IA_size, &JA_size, &A, &IA, &JA, &b_mat);
-        cout << "construct ok" << endl;
+        // int *h_A, *h_IA, *h_JA;
 
         // allocate memory in host RAM, h_cc is used to store CPU result
         int *h_a, *h_b, *h_c, *h_cc;
-        cudaMallocHost((void **) &h_a, sizeof(int)*m*n);
+        // cudaMallocHost((void **) &h_a, sizeof(int)*m*n);
         cudaMallocHost((void **) &h_b, sizeof(int)*n*k);
         cudaMallocHost((void **) &h_c, sizeof(int)*m*k);
         cudaMallocHost((void **) &h_cc, sizeof(int)*m*k);
+        cudaMallocHost((void **) &A, sizeof(int)* A_size);
+        cudaMallocHost((void **) &IA, sizeof(int)* IA_size);
+        cudaMallocHost((void **) &JA, sizeof(int)* JA_size);
 
+        construct_matrices(&m, &n, &k, &A_size, &IA_size, &JA_size, &A, &IA, &JA, &h_b);
+        cout << "construct ok" << endl;
+        
         float gpu_elapsed_time_ms, cpu_elapsed_time_ms;
 
         // some events to count the execution time
@@ -295,14 +300,23 @@ int main(int argc, char const *argv[])
         // start to count execution time of GPU version
         cudaEventRecord(start, 0);
         // Allocate memory space on the device 
-        int *d_a, *d_b, *d_c;
-        cudaMalloc((void **) &d_a, sizeof(int)*m*n);
+        int *d_a, *d_b, *d_c, *d_A, *d_IA, *d_JA;
+        // cudaMalloc((void **) &d_a, sizeof(int)*m*n);
         cudaMalloc((void **) &d_b, sizeof(int)*n*k);
         cudaMalloc((void **) &d_c, sizeof(int)*m*k);
+        cudaMalloc((void **) &h_A, sizeof(int)*A_size);
+        cudaMalloc((void **) &h_IA, sizeof(int)*IA_size);
+        cudaMalloc((void **) &h_JA, sizeof(int)*JA_size);
+
+
 
         // copy matrix A and B from host to device memory
-        cudaMemcpy(d_a, h_a, sizeof(int)*m*n, cudaMemcpyHostToDevice);
+        // cudaMemcpy(d_a, h_a, sizeof(int)*m*n, cudaMemcpyHostToDevice);
         cudaMemcpy(d_b, h_b, sizeof(int)*n*k, cudaMemcpyHostToDevice);
+        cudaMemcpy(h_A, A, sizeof(int)*A_size, cudaMemcpyHostToDevice);
+        cudaMemcpy(h_IA, IA, sizeof(int)*IA_size, cudaMemcpyHostToDevice);
+        cudaMemcpy(h_JA, JA, sizeof(int)*JA_size, cudaMemcpyHostToDevice);
+
 
         unsigned int grid_rows = (m + BLOCK_SIZE - 1) / BLOCK_SIZE;
         unsigned int grid_cols = (k + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -312,7 +326,7 @@ int main(int argc, char const *argv[])
         // Launch kernel 
         if(m == n && n == k)
         {
-            gpu_square_matrix_mult<<<dimGrid, dimBlock>>>(d_a, d_b, d_c, n);    
+            // gpu_square_matrix_mult<<<dimGrid, dimBlock>>>(d_a, d_b, d_c, n);    
         }
         else
         {
@@ -329,6 +343,8 @@ int main(int argc, char const *argv[])
         // compute time elapse on GPU computing
         cudaEventElapsedTime(&gpu_elapsed_time_ms, start, stop);
         printf("Time elapsed on matrix multiplication of %dx%d . %dx%d on GPU: %f ms.\n", m, n, n, k, gpu_elapsed_time_ms);
+
+        /* cpu version
 
         // start the CPU version
         cudaEventRecord(start, 0);
@@ -364,12 +380,17 @@ int main(int argc, char const *argv[])
         {
             printf("incorrect results\n\n");
         }
+        */
 
         // free memory
-        cudaFree(d_a);
+        // cudaFree(d_a);
         cudaFree(d_b);
         cudaFree(d_c);
-        cudaFreeHost(h_a);
+        cudaFree(d_A);
+        cudaFree(d_IA);
+        cudaFree(d_JA);
+
+        // cudaFreeHost(h_a);
         cudaFreeHost(h_b);
         cudaFreeHost(h_c);
         cudaFreeHost(h_cc);
