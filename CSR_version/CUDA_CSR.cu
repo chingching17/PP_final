@@ -35,23 +35,43 @@ Note:
 return: none
 *********************************************************************
 */
+// __global__ void spmv_csr(const int *row_ptr, const int *col_ind, const float *values, const int num_rows, const float *x, float *y)
+// row_ptr = IA
+// col_ind = JA
+// values = A
+// y = result(c)
+// x = b_mat
+// num_rows = # of rows = m?
 __global__ void gpu_matrix_mult(int m, int n, int k, const int A_size, const int IA_size, const int JA_size, const int *A, const int *IA, const int *JA, const int *b_mat, int *c)
 { 
-    int row = blockIdx.y * blockDim.y + threadIdx.y; 
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
-    int sum = 0;
-    if( col < k && row < m) 
-    {
-        // for(int i = 0; i < n; i++) 
-        // {
-        //     sum += a[row * n + i] * b[i * k + col];
-        // }
-        // c[row * k + col] = sum;
-        for(int i=1; i<IA_size; i++){
-            for(int j=IA[i-1]; j<IA[i]; j++){
-                c[i-1]+=A[j]*b_mat[JA[j]];
-            }
+    // int row = blockIdx.y * blockDim.y + threadIdx.y; 
+    // int col = blockIdx.x * blockDim.x + threadIdx.x;
+    // int sum = 0;
+    // if( col < k && row < m) 
+    // {
+    //     // for(int i = 0; i < n; i++) 
+    //     // {
+    //     //     sum += a[row * n + i] * b[i * k + col];
+    //     // }
+    //     // c[row * k + col] = sum;
+        
+    //     // for(int i=1; i<IA_size; i++){
+    //     //     for(int j=IA[i-1]; j<IA[i]; j++){
+    //     //         c[i-1]+=A[j]*b_mat[JA[j]];
+    //     //     }
+    //     // }
+    // }
+    int num_rows = m;
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < num_rows; i += blockDim.x * gridDim.x) {
+        float dotProduct = 0;
+        const int row_start = IA[i];
+        const int row_end = IA[i + 1];
+        
+        for (int j = row_start; j < row_end; j++) {
+            dotProduct += A[j] * b_mat[JA[j]];
         }
+        
+        c[i] = dotProduct;
     }
 } 
 
