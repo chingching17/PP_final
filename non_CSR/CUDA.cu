@@ -246,8 +246,7 @@ int main(int argc, char const *argv[])
         cudaEventCreate(&start);
         cudaEventCreate(&stop);
 
-        // start to count execution time of GPU version
-        cudaEventRecord(start, 0);
+        
         // Allocate memory space on the device 
         int *d_a, *d_b, *d_c;
         cudaMalloc((void **) &d_a, sizeof(int)*m*n);
@@ -270,13 +269,16 @@ int main(int argc, char const *argv[])
         }
         else
         {
-            gpu_matrix_mult<<<dimGrid, dimBlock>>>(d_a, d_b, d_c, m, n, k);    
+            // start to count execution time of GPU version
+            cudaEventRecord(start, 0);
+            gpu_matrix_mult<<<dimGrid, dimBlock>>>(d_a, d_b, d_c, m, n, k);   
+            cudaEventRecord(stop, 0);
+
         }
         // Transefr results from device to host 
         cudaMemcpy(h_c, d_c, sizeof(int)*m*k, cudaMemcpyDeviceToHost);
         cudaThreadSynchronize();
         // time counting terminate
-        cudaEventRecord(stop, 0);
         cudaEventSynchronize(stop);
 
         // compute time elapse on GPU computing
