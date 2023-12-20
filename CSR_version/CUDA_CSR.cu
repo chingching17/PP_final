@@ -1,9 +1,3 @@
-/*
- *  matrix.cu contains the code that realize some common used matrix operations in CUDA
- *  
- *  this is a toy program for learning CUDA, some functions are reusable in other project
- *  
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -13,29 +7,6 @@
 using namespace std;
 
 #define BLOCK_SIZE 16
-
-/*
-*********************************************************************
-function name: gpu_matrix_mult
-
-description: dot product of two matrix (not only square)
-
-parameters: 
-            &a GPU device pointer to a m X n matrix (A)
-            &b GPU device pointer to a n X k matrix (B)
-            &c GPU device output purpose pointer to a m X k matrix (C) 
-            to store the result
-
-Note:
-    grid and block should be configured as:
-        dim3 dimGrid((k + BLOCK_SIZE - 1) / BLOCK_SIZE, (m + BLOCK_SIZE - 1) / BLOCK_SIZE);
-        dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
-
-    further sppedup can be obtained by using shared memory to decrease global memory access times
-return: none
-*********************************************************************
-*/
-// __global__ void spmv_csr(const int *row_ptr, const int *col_ind, const float *values, const int num_rows, const float *x, float *y)
 // row_ptr = IA
 // col_ind = JA
 // values = A
@@ -44,57 +15,37 @@ return: none
 // num_rows = # of rows = m?
 __global__ void gpu_matrix_mult(int m, int n, int k, const int A_size, const int IA_size, const int JA_size, const int *A, const int *IA, const int *JA, const int *b_mat, int *c)
 { 
-    // int row = blockIdx.y * blockDim.y + threadIdx.y; 
-    // int col = blockIdx.x * blockDim.x + threadIdx.x;
-    // int sum = 0;
-    // if( col < k && row < m) 
-    // {
-    //     // for(int i = 0; i < n; i++) 
-    //     // {
-    //     //     sum += a[row * n + i] * b[i * k + col];
-    //     // }
-    //     // c[row * k + col] = sum;
+    // int num_rows = m;
+    // for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < num_rows; i += blockDim.x * gridDim.x) {
+    //     float dotProduct = 0;
+    //     const int row_start = IA[i];
+    //     const int row_end = IA[i + 1];
         
-    //     // for(int i=1; i<IA_size; i++){
-    //     //     for(int j=IA[i-1]; j<IA[i]; j++){
-    //     //         c[i-1]+=A[j]*b_mat[JA[j]];
-    //     //     }
-    //     // }
+    //     for (int j = row_start; j < row_end; j++) {
+    //         dotProduct += A[j] * b_mat[JA[j]];
+    //     }
+        
+    //     c[i] = dotProduct;
     // }
-    int num_rows = m;
-    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < num_rows; i += blockDim.x * gridDim.x) {
-        float dotProduct = 0;
-        const int row_start = IA[i];
-        const int row_end = IA[i + 1];
-        
-        for (int j = row_start; j < row_end; j++) {
-            dotProduct += A[j] * b_mat[JA[j]];
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (row < m && col < k) {
+        int row_start = IA[row];
+        int row_end = IA[row + 1];
+        float sum = 0.0;
+
+        for (int i = row_start; i < row_end; i++) {
+            int a_col = JA[i];
+            float a_val = A[i];
+            float b_val = b_mat[a_col * k + col];
+            sum += a_val * b_val;
         }
-        
-        c[i] = dotProduct;
+
+        c[row * k + col] = sum;
     }
 } 
 
-/*
-*********************************************************************
-function name: gpu_square_matrix_mult
-
-description: dot product of two matrix (not only square) in GPU
-
-parameters: 
-            &a GPU device pointer to a n X n matrix (A)
-            &b GPU device pointer to a n X n matrix (B)
-            &c GPU device output purpose pointer to a n X n matrix (C) 
-            to store the result
-Note:
-    grid and block should be configured as:
-
-        dim3 dim_grid((n - 1) / BLOCK_SIZE + 1, (n - 1) / BLOCK_SIZE + 1, 1);
-        dim3 dim_block(BLOCK_SIZE, BLOCK_SIZE, 1);
-
-return: none
-*********************************************************************
-*/
 __global__ void gpu_square_matrix_mult(int *d_a, int *d_b, int *d_result, int n) 
 {
     __shared__ int tile_a[BLOCK_SIZE][BLOCK_SIZE];
@@ -141,24 +92,6 @@ __global__ void gpu_square_matrix_mult(int *d_a, int *d_b, int *d_result, int n)
     }
 }
 
-/*
-*********************************************************************
-function name: gpu_matrix_transpose
-
-description: matrix transpose
-
-parameters: 
-            &mat_in GPU device pointer to a rows X cols matrix
-            &mat_out GPU device output purpose pointer to a cols X rows matrix 
-            to store the result
-Note:
-    grid and block should be configured as:
-        dim3 dim_grid((n - 1) / BLOCK_SIZE + 1, (n - 1) / BLOCK_SIZE + 1, 1);
-        dim3 dim_block(BLOCK_SIZE, BLOCK_SIZE, 1);
-
-return: none
-*********************************************************************
-*/
 __global__ void gpu_matrix_transpose(int* mat_in, int* mat_out, unsigned int rows, unsigned int cols) 
 {
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -171,21 +104,7 @@ __global__ void gpu_matrix_transpose(int* mat_in, int* mat_out, unsigned int row
         mat_out[trans_pos] = mat_in[pos];
     }
 }
-/*
-*********************************************************************
-function name: cpu_matrix_mult
 
-description: dot product of two matrix (not only square) in CPU, 
-             for validating GPU results
-
-parameters: 
-            &a CPU host pointer to a m X n matrix (A)
-            &b CPU host pointer to a n X k matrix (B)
-            &c CPU host output purpose pointer to a m X k matrix (C) 
-            to store the result
-return: none
-*********************************************************************
-*/
 void cpu_matrix_mult(int *h_a, int *h_b, int *h_result, int m, int n, int k) {
     for (int i = 0; i < m; ++i) 
     {
@@ -201,18 +120,6 @@ void cpu_matrix_mult(int *h_a, int *h_b, int *h_result, int m, int n, int k) {
     }
 }
 
-/*
-*********************************************************************
-function name: main
-
-description: test and compare
-
-parameters: 
-            none
-
-return: none
-*********************************************************************
-*/
 void construct_matrices(int *n_ptr, int *m_ptr, int *l_ptr, int *A_size, int *IA_size, int *JA_size,
                         int **A, int **IA, int **JA, int **b_mat_ptr){
     cin >> *n_ptr >> *m_ptr >> *l_ptr;
@@ -266,7 +173,7 @@ void construct_matrices(int *n_ptr, int *m_ptr, int *l_ptr, int *A_size, int *IA
 
 }
 
-int matrix_multiply_cpu(const int n, const int m, const int l, const int A_size, const int IA_size, const int JA_size,
+void matrix_multiply_cpu(const int n, const int m, const int l, const int A_size, const int IA_size, const int JA_size,
                      const int *A, const int *IA, const int *JA, const int *b_mat, int *d_cc){
     int *result_mat = new int[n * l];
 
@@ -291,21 +198,8 @@ int matrix_multiply_cpu(const int n, const int m, const int l, const int A_size,
         printf("\n");
     }
     cout << "okay" << endl;
-    int all_ok = 1;
-    // for (int i = 0; i < n; ++i)
-    // {
-    //     for (int j = 0; j < l; ++j)
-    //     {
-    //         //printf("[%d][%d]:%d == [%d][%d]:%d, ", i, j, d_cc[i*k + j], i, j, d_c[i*k + j]);
-    //         if(result_mat[i*l + j] != d_cc[i*l + j])
-    //         {
-    //             all_ok = 0;
-    //         }
-    //     }
-    //     //printf("\n");
-    // }
+    
     delete[] result_mat;
-    return all_ok;
 }
 
 int main(int argc, char const *argv[])
@@ -315,13 +209,12 @@ int main(int argc, char const *argv[])
     int num;
     cin >> num;
     for(int i = 0; i < num; i++){
-        /* Fixed seed for illustration */
         srand(3333);
         int m, n, k, A_size, IA_size, JA_size;
         int *A, *IA, *JA, *b_mat;
         construct_matrices(&m, &n, &k, &A_size, &IA_size, &JA_size, &A, &IA, &JA, &b_mat);
 
-        // allocate memory in host RAM, h_cc is used to store CPU result
+        // cout << IA_size << ' ' << JA_size << ' ' << A_size << endl;
         int *h_b, *h_c, *h_cc, *h_A, *h_JA, *h_IA;
         cudaMalloc((void **) &h_b, sizeof(int)*n*k);
         cudaMalloc((void **) &h_c, sizeof(int)*m*k);
@@ -356,7 +249,7 @@ int main(int argc, char const *argv[])
         {
             // start to count execution time of GPU version
             cudaEventRecord(start, 0);
-            gpu_matrix_mult<<<dimGrid, dimBlock>>>(m, n, k,  A_size, IA_size, JA_size, h_A, h_IA, h_JA, h_b, h_c);  
+            gpu_matrix_mult<<<dimGrid, dimBlock>>>(m, n, k,  A_size, IA_size, JA_size, h_A, h_IA, h_JA, h_b, h_c); 
             cudaEventRecord(stop, 0);
         }
         // Transefr results from device to host 
@@ -364,32 +257,20 @@ int main(int argc, char const *argv[])
         cudaThreadSynchronize();
         // time counting terminate
         cudaEventSynchronize(stop);
-        cout << m << ' ' << k << ' ' << sizeof(h_cc) << endl;
+        // cout << "gpu_ver" << endl;
+        // cout << m << ' ' << k << ' ' << sizeof(h_cc) << ' ' << sizeof(h_c) << endl;
 
-        cout << "gpu_ver" << endl;
-        // for (int i = 0; i < m; ++i)
-        // {
-        //     for (int j = 0; j < k; ++j)
-        //     {
-        //         cout << h_cc[i*k +j] << ' ';
-        //     }
-        //     printf("\n");
-        // }
-        // for(int i = 0; i < sizeof(h_cc) ; i++){
-        //     cout << h_cc[0] << ' ';
-        // }
-        // cout << endl;
 
-        // compute time elapse on GPU computing
         cudaEventElapsedTime(&gpu_elapsed_time_ms, start, stop);
         printf("Time elapsed on matrix multiplication of %dx%d . %dx%d on GPU: %f ms.\n", m, n, n, k, gpu_elapsed_time_ms);
 
+        /*
         // cpu version
         // start the CPU version
         int all_ok = 1;
         cudaEventRecord(start, 0);
 
-        all_ok = matrix_multiply_cpu(m, n, k, A_size, IA_size, JA_size, A, IA, JA, b_mat, h_cc);
+        matrix_multiply_cpu(m, n, k, A_size, IA_size, JA_size, A, IA, JA, b_mat, h_cc);
 
         cudaEventRecord(stop, 0);
         cudaEventSynchronize(stop);
@@ -411,14 +292,14 @@ int main(int argc, char const *argv[])
         // }
 
         // roughly compute speedup
-        if(all_ok)
-        {
-            printf("all results are correct!!!, speedup = %f\n\n", cpu_elapsed_time_ms / gpu_elapsed_time_ms);
-        }
-        else
-        {
-            printf("incorrect results\n\n");
-        }
+        // if(all_ok)
+        // {
+        //     printf("all results are correct!!!, speedup = %f\n\n", cpu_elapsed_time_ms / gpu_elapsed_time_ms);
+        // }
+        // else
+        // {
+        //     printf("incorrect results\n\n");
+        // }*/
 
         // free memory
         // cudaFree(d_a);
