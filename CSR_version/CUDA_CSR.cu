@@ -282,6 +282,8 @@ int matrix_multiply_cpu(const int n, const int m, const int l, const int A_size,
         }
     }
 
+    
+    cout << "cpu_ver" << endl;
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < l; ++j) {
             printf("%d ",result_mat[i * l + j]);
@@ -362,11 +364,21 @@ int main(int argc, char const *argv[])
         cudaThreadSynchronize();
         // time counting terminate
         cudaEventSynchronize(stop);
+        cout << m << ' ' << k << ' ' << sizeof(h_cc) << endl;
 
         cout << "gpu_ver" << endl;
-        for(int a = 0; a < m * k; a++){
-            cout << h_cc[a] << ' ' << endl;
-        }
+        // for (int i = 0; i < m; ++i)
+        // {
+        //     for (int j = 0; j < k; ++j)
+        //     {
+        //         cout << h_cc[i*k +j] << ' ';
+        //     }
+        //     printf("\n");
+        // }
+        // for(int i = 0; i < sizeof(h_cc) ; i++){
+        //     cout << h_cc[0] << ' ';
+        // }
+        // cout << endl;
 
         // compute time elapse on GPU computing
         cudaEventElapsedTime(&gpu_elapsed_time_ms, start, stop);
