@@ -1,9 +1,3 @@
-/*
- *  matrix.cu contains the code that realize some common used matrix operations in CUDA
- *  
- *  this is a toy program for learning CUDA, some functions are reusable in other project
- *  
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -12,27 +6,6 @@ using namespace std;
 
 #define BLOCK_SIZE 16
 
-/*
-*********************************************************************
-function name: gpu_matrix_mult
-
-description: dot product of two matrix (not only square)
-
-parameters: 
-            &a GPU device pointer to a m X n matrix (A)
-            &b GPU device pointer to a n X k matrix (B)
-            &c GPU device output purpose pointer to a m X k matrix (C) 
-            to store the result
-
-Note:
-    grid and block should be configured as:
-        dim3 dimGrid((k + BLOCK_SIZE - 1) / BLOCK_SIZE, (m + BLOCK_SIZE - 1) / BLOCK_SIZE);
-        dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
-
-    further sppedup can be obtained by using shared memory to decrease global memory access times
-return: none
-*********************************************************************
-*/
 __global__ void gpu_matrix_mult(int *a,int *b, int *c, int m, int n, int k)
 { 
     int row = blockIdx.y * blockDim.y + threadIdx.y; 
@@ -48,26 +21,6 @@ __global__ void gpu_matrix_mult(int *a,int *b, int *c, int m, int n, int k)
     }
 } 
 
-/*
-*********************************************************************
-function name: gpu_square_matrix_mult
-
-description: dot product of two matrix (not only square) in GPU
-
-parameters: 
-            &a GPU device pointer to a n X n matrix (A)
-            &b GPU device pointer to a n X n matrix (B)
-            &c GPU device output purpose pointer to a n X n matrix (C) 
-            to store the result
-Note:
-    grid and block should be configured as:
-
-        dim3 dim_grid((n - 1) / BLOCK_SIZE + 1, (n - 1) / BLOCK_SIZE + 1, 1);
-        dim3 dim_block(BLOCK_SIZE, BLOCK_SIZE, 1);
-
-return: none
-*********************************************************************
-*/
 __global__ void gpu_square_matrix_mult(int *d_a, int *d_b, int *d_result, int n) 
 {
     __shared__ int tile_a[BLOCK_SIZE][BLOCK_SIZE];
@@ -114,24 +67,6 @@ __global__ void gpu_square_matrix_mult(int *d_a, int *d_b, int *d_result, int n)
     }
 }
 
-/*
-*********************************************************************
-function name: gpu_matrix_transpose
-
-description: matrix transpose
-
-parameters: 
-            &mat_in GPU device pointer to a rows X cols matrix
-            &mat_out GPU device output purpose pointer to a cols X rows matrix 
-            to store the result
-Note:
-    grid and block should be configured as:
-        dim3 dim_grid((n - 1) / BLOCK_SIZE + 1, (n - 1) / BLOCK_SIZE + 1, 1);
-        dim3 dim_block(BLOCK_SIZE, BLOCK_SIZE, 1);
-
-return: none
-*********************************************************************
-*/
 __global__ void gpu_matrix_transpose(int* mat_in, int* mat_out, unsigned int rows, unsigned int cols) 
 {
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -144,21 +79,7 @@ __global__ void gpu_matrix_transpose(int* mat_in, int* mat_out, unsigned int row
         mat_out[trans_pos] = mat_in[pos];
     }
 }
-/*
-*********************************************************************
-function name: cpu_matrix_mult
 
-description: dot product of two matrix (not only square) in CPU, 
-             for validating GPU results
-
-parameters: 
-            &a CPU host pointer to a m X n matrix (A)
-            &b CPU host pointer to a n X k matrix (B)
-            &c CPU host output purpose pointer to a m X k matrix (C) 
-            to store the result
-return: none
-*********************************************************************
-*/
 void cpu_matrix_mult(int *h_a, int *h_b, int *h_result, int m, int n, int k) {
     for (int i = 0; i < m; ++i) 
     {
@@ -174,18 +95,6 @@ void cpu_matrix_mult(int *h_a, int *h_b, int *h_result, int m, int n, int k) {
     }
 }
 
-/*
-*********************************************************************
-function name: main
-
-description: test and compare
-
-parameters: 
-            none
-
-return: none
-*********************************************************************
-*/
 void construct_matrices(int *n_ptr, int *m_ptr, int *l_ptr,
                         int **a_mat_ptr, int **b_mat_ptr) {
     std::cin >> *n_ptr >> *m_ptr >> *l_ptr;
@@ -208,15 +117,15 @@ void construct_matrices(int *n_ptr, int *m_ptr, int *l_ptr,
 
 int main(int argc, char const *argv[])
 {
+    ios_base::sync_with_stdio(false);
+    cin.tie(0);
     int num;
     cin >> num;
     for(int i = 0; i < num; i++){
         int m, n, k;
-        /* Fixed seed for illustration */
         srand(3333);
         cin >> m >> n >> k;
 
-        // allocate memory in host RAM, h_cc is used to store CPU result
         int *h_a, *h_b, *h_c, *h_cc;
         cudaMallocHost((void **) &h_a, sizeof(int)*m*n);
         cudaMallocHost((void **) &h_b, sizeof(int)*n*k);
@@ -225,35 +134,18 @@ int main(int argc, char const *argv[])
 
         construct_matrices(&m, &n, &k, &h_a, &h_b);
 
-        // random initialize matrix A
-        // for (int i = 0; i < m; ++i) {
-        //     for (int j = 0; j < n; ++j) {
-        //         h_a[i * n + j] = rand() % 1024;
-        //     }
-        // }
-
-        // // random initialize matrix B
-        // for (int i = 0; i < n; ++i) {
-        //     for (int j = 0; j < k; ++j) {
-        //         h_b[i * k + j] = rand() % 1024;
-        //     }
-        // }
-
         float gpu_elapsed_time_ms, cpu_elapsed_time_ms;
 
-        // some events to count the execution time
         cudaEvent_t start, stop;
         cudaEventCreate(&start);
         cudaEventCreate(&stop);
 
         
-        // Allocate memory space on the device 
         int *d_a, *d_b, *d_c;
         cudaMalloc((void **) &d_a, sizeof(int)*m*n);
         cudaMalloc((void **) &d_b, sizeof(int)*n*k);
         cudaMalloc((void **) &d_c, sizeof(int)*m*k);
 
-        // copy matrix A and B from host to device memory
         cudaMemcpy(d_a, h_a, sizeof(int)*m*n, cudaMemcpyHostToDevice);
         cudaMemcpy(d_b, h_b, sizeof(int)*n*k, cudaMemcpyHostToDevice);
 
@@ -269,22 +161,21 @@ int main(int argc, char const *argv[])
         }
         else
         {
-            // start to count execution time of GPU version
             cudaEventRecord(start, 0);
             gpu_matrix_mult<<<dimGrid, dimBlock>>>(d_a, d_b, d_c, m, n, k);   
             cudaEventRecord(stop, 0);
 
         }
-        // Transefr results from device to host 
+
         cudaMemcpy(h_c, d_c, sizeof(int)*m*k, cudaMemcpyDeviceToHost);
         cudaThreadSynchronize();
-        // time counting terminate
+
         cudaEventSynchronize(stop);
 
         // compute time elapse on GPU computing
         cudaEventElapsedTime(&gpu_elapsed_time_ms, start, stop);
         printf("Time elapsed on matrix multiplication of %dx%d . %dx%d on GPU: %f ms.\n", m, n, n, k, gpu_elapsed_time_ms);
-
+/*
         // start the CPU version
         cudaEventRecord(start, 0);
 
@@ -318,7 +209,7 @@ int main(int argc, char const *argv[])
         else
         {
             printf("incorrect results\n");
-        }
+        }*/
 
         // free memory
         cudaFree(d_a);
