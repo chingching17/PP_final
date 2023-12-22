@@ -74,6 +74,11 @@ int main(int argc, char const *argv[])
         cudaEventCreate(&stop_total);
         cudaEventRecord(start_total,0);
 
+        float read_time;
+        cudaEvent_t start_read, stop_read;
+        cudaEventCreate(&start_read);
+        cudaEventCreate(&stop_read);
+
         
 
         int *h_a, *h_b, *h_c, *h_cc;
@@ -82,7 +87,11 @@ int main(int argc, char const *argv[])
         cudaMallocHost((void **) &h_c, sizeof(int)*m*k);
         cudaMallocHost((void **) &h_cc, sizeof(int)*m*k);
 
+        cudaEventRecord(start_read,0);
         construct_matrices(&m, &n, &k, &h_a, &h_b);
+        cudaEventRecord(stop_read, 0);
+        cudaEventSynchronize(stop_read);
+
 
         float gpu_elapsed_time_ms, cpu_elapsed_time_ms;
 
@@ -126,12 +135,17 @@ int main(int argc, char const *argv[])
 
 
         // compute time elapse on GPU computing
+        cudaEventElapsedTime(&read_time, start_read, stop_read);
+        printf("Read time: %f ms.",  read_time);
+
         cudaEventElapsedTime(&gpu_elapsed_time_ms, start, stop);
-        printf("Time elapsed on matrix multiplication of %dx%d . %dx%d on GPU: %f ms.\n", m, n, n, k, gpu_elapsed_time_ms);
+        printf("Mul time: %f ms.",  gpu_elapsed_time_ms);
 
         cudaEventElapsedTime(&gpu_total_time, start_total, stop_total);
-        printf("Time elapsed on matrix multiplication of %dx%d . %dx%d on GPU for total time: %f ms.\n", m, n, n, k, gpu_total_time);
+        printf("Total time: %f ms.\n",  gpu_total_time);
 
+        cudaEventDestroy(start_read);
+        cudaEventDestroy(stop_read);
         cudaEventDestroy(start_total);
         cudaEventDestroy(stop_total);
 /*
