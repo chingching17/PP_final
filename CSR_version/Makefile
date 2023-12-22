@@ -1,8 +1,8 @@
 nonCSR:
-	g++ -o serial serial.cpp; g++ -o Pthread Pthread.cpp -lpthread; g++ -fopenmp -o OpenMP OpenMP.cpp; mpicxx -o MPI MPI.cpp; nvcc -o cuda_csr CUDA_CSR.cu
+	g++ -o serial serial.cpp; g++ -o Pthread Pthread.cpp -lpthread; g++ -fopenmp -o OpenMP OpenMP.cpp; mpicxx -o MPI MPI.cpp; nvcc -o CUDA CUDA.cu;
 
 CSR:
-	g++ -o serial_CSR serial_CSR.cpp; g++ -o Pthread_CSR Pthread_CSR.cpp -lpthread; g++ -fopenmp -o OpenMP_CSR OpenMP_CSR.cpp; mpicxx -o MPI_CSR MPI_CSR.cpp;
+	g++ -o serial_CSR serial_CSR.cpp; g++ -o Pthread_CSR Pthread_CSR.cpp -lpthread; g++ -fopenmp -o OpenMP_CSR OpenMP_CSR.cpp; mpicxx -o MPI_CSR MPI_CSR.cpp;nvcc -o CUDA_CSR CUDA_CSR.cu
 
 data:
 	g++ -o data generate_data.cpp; g++ -o csr CSR.cpp;
