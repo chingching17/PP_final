@@ -35,9 +35,13 @@ void printVector(const vi& V, char* msg)
 	cout << "]" << endl;
 }
 
+auto s0 = std::chrono::steady_clock::now();
+auto s1 = std::chrono::steady_clock::now();
+
 // Generate the three vectors A, IA, JA 
 void sparesify(const matrix& M, ofstream &output)
 {
+	auto s0 = std::chrono::steady_clock::now();
 	int m = M.size();
 	int n = M[0].size(), i, j;
 	vi A;
@@ -58,7 +62,7 @@ void sparesify(const matrix& M, ofstream &output)
 		}
 		IA.push_back(NNZ);
 	}
-
+	auto s1 = std::chrono::steady_clock::now();
 	// printMatrix(M);
 	// printVector(A, (char*)"A = ");
 	// printVector(IA, (char*)"IA = ");
@@ -113,7 +117,7 @@ int main()
 		output << endl;
 		auto t2 = std::chrono::steady_clock::now();
         cout << "Read time: "<<chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count() << " ms. ";
-        cout << "Sparesify time: "<<chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms. ";
+        cout << "Sparesify time: "<<chrono::duration_cast<std::chrono::milliseconds>(s1 - s0).count() << " ms. ";
         cout << "Total time: "<<chrono::duration_cast<std::chrono::milliseconds>(t2 - t0).count() << " ms." << endl;
 	}
 	output.close();
