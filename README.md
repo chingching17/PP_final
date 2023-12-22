@@ -12,3 +12,14 @@ g++ generate_data.cpp -o generate
 g++ CSR.cpp -o csr
 ./csr < matrix_data.txt
 ```
+## step 3: make 
+1. cd to non_CSR/ CSR_version to make  
+2. run the test file using .sh  
+- for non_CSR  
+```
+sh run_serial.sh
+```
+- for CSR_version  
+```
+sh run_CSR.sh
+```
