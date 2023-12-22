@@ -88,6 +88,7 @@ int main() {
     for(int i=0; i<num; i++){
         int n, m, l;
         int *a_mat, *b_mat;
+        auto t0 = std::chrono::steady_clock::now();
         construct_matrices(&n, &m, &l, &a_mat, &b_mat);
         int *result_mat = new int[n * l];
         int num_threads = 4;
@@ -102,7 +103,10 @@ int main() {
         // }
         destruct_matrices(a_mat, b_mat);
         delete[] result_mat;
-        cout << chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << endl;
+        auto t3 = std::chrono::steady_clock::now();
+        cout << "Read time: "<<chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count() << " ms. ";
+        cout << "Multiply time: "<<chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms. ";
+        cout << "Total time: "<<chrono::duration_cast<std::chrono::milliseconds>(t3 - t0).count() << " ms." << endl;
     }
     return 0;
 }
