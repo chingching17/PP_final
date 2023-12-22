@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <chrono>
 
 using namespace std;
 
@@ -94,19 +95,26 @@ int main()
 		output << n << " " << m << " " << l << endl;
 		M.clear();
 		M.resize(n);
+		auto t0 = std::chrono::steady_clock::now();
 		for(int i=0; i<n; i++){
 			for(int j=0; j<m; j++){
 				cin >> tmp;
 				M[i].push_back(tmp);
 			}
 		}
+		auto t1 = std::chrono::steady_clock::now();
 
 		sparesify(M,output);
+		
 		for(int i=0; i<m; i++){
 			cin >> tmp;
 			output << tmp << endl;
 		}
 		output << endl;
+		auto t2 = std::chrono::steady_clock::now();
+        cout << "Read time: "<<chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count() << " ms. ";
+        cout << "Sparesify time: "<<chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms. ";
+        cout << "Total time: "<<chrono::duration_cast<std::chrono::milliseconds>(t2 - t0).count() << " ms." << endl;
 	}
 	output.close();
 	return 0;

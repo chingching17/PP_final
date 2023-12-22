@@ -134,14 +134,18 @@ int main () {
         int n, m, l;
         int *a_mat, *b_mat;
         //double start_time = MPI_Wtime();
+        auto t0 = std::chrono::steady_clock::now();
         construct_matrices(&n, &m, &l, &a_mat, &b_mat);
         auto t1 = std::chrono::steady_clock::now();
         matrix_multiply(n, m, l, a_mat, b_mat);
         auto t2 = std::chrono::steady_clock::now();
         destruct_matrices(a_mat, b_mat);
+        auto t3 = std::chrono::steady_clock::now();
         //double end_time = MPI_Wtime();
         //printf("MPI running time: %lf Seconds\n", end_time - start_time);
-        cout << chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << endl;
+        cout << "Read time: "<<chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count() << " ms. ";
+        cout << "Multiply time: "<<chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms. ";
+        cout << "Total time: "<<chrono::duration_cast<std::chrono::milliseconds>(t3 - t0).count() << " ms." << endl;
     }
     MPI_Finalize();
     return 0;
