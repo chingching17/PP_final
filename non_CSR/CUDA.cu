@@ -62,7 +62,6 @@ int main(int argc, char const *argv[])
     cin.tie(0);
     int num;
     cin >> num;
-    cout << num << endl;
     for(int i = 0; i < num; i++){
         int m, n, k;
         srand(3333);
