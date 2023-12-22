@@ -87,9 +87,10 @@ void matrix_multiply(const int n, const int m, const int l, const int A_size, co
     int num_threads=4;
     int chunk_size = (IA_size-1) / num_threads;
     for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < l; ++j) {
-            result_mat[i * l + j] = 0;
-        }
+        // for (int j = 0; j < l; ++j) {
+        //     result_mat[i * l + j] = 0;
+        // }
+        result_mat[i] = 0;
     }
     pthread_t threads[num_threads];
     vector<ThreadData> threadDataArray(num_threads);

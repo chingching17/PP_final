@@ -83,9 +83,10 @@ void matrix_multiply(int n, int m, int l, int A_size, int IA_size, int JA_size,
         std::memcpy(local_JA, JA, sizeof(int) * JA_size);
         result_mat = new int[n * l];     
         for (int i = 0; i < n; ++i) {
-            for (int j = 0; j < l; ++j){
-                result_mat[i * l + j] = 0;
-            }
+            // for (int j = 0; j < l; ++j){
+            //     result_mat[i * l + j] = 0;
+            // }
+            result_mat[i] = 0;
         }
     }
     MPI_Bcast(local_A, A_size, MPI_INT, 0, MPI_COMM_WORLD);

@@ -64,9 +64,10 @@ void matrix_multiply(const int n, const int m, const int l, const int A_size, co
     int *result_mat = new int[n * l];
 
     for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < l; ++j) {
-            result_mat[i * l + j] = 0;
-        }
+        // for (int j = 0; j < l; ++j) {
+        //     result_mat[i * l + j] = 0;
+        // }
+        result_mat[i] = 0;
     }
 
     for(int i=1; i<IA_size; i++){
