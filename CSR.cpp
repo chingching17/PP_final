@@ -41,7 +41,7 @@ auto s1 = std::chrono::steady_clock::now();
 // Generate the three vectors A, IA, JA 
 void sparesify(const matrix& M, ofstream &output)
 {
-	auto s0 = std::chrono::steady_clock::now();
+	s0 = std::chrono::steady_clock::now();
 	int m = M.size();
 	int n = M[0].size(), i, j;
 	vi A;
@@ -62,7 +62,7 @@ void sparesify(const matrix& M, ofstream &output)
 		}
 		IA.push_back(NNZ);
 	}
-	auto s1 = std::chrono::steady_clock::now();
+	s1 = std::chrono::steady_clock::now();
 	// printMatrix(M);
 	// printVector(A, (char*)"A = ");
 	// printVector(IA, (char*)"IA = ");
