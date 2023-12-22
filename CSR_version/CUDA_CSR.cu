@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <iostream>
 #include <vector>
+#include <chrono>
+
 
 using namespace std;
 
@@ -15,18 +17,6 @@ using namespace std;
 // num_rows = # of rows = m?
 __global__ void gpu_matrix_mult(int m, int n, int k, const int A_size, const int IA_size, const int JA_size, const int *A, const int *IA, const int *JA, const int *b_mat, int *c)
 { 
-    // int num_rows = m;
-    // for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < num_rows; i += blockDim.x * gridDim.x) {
-    //     float dotProduct = 0;
-    //     const int row_start = IA[i];
-    //     const int row_end = IA[i + 1];
-        
-    //     for (int j = row_start; j < row_end; j++) {
-    //         dotProduct += A[j] * b_mat[JA[j]];
-    //     }
-        
-    //     c[i] = dotProduct;
-    // }
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -45,65 +35,6 @@ __global__ void gpu_matrix_mult(int m, int n, int k, const int A_size, const int
         c[row * k + col] = sum;
     }
 } 
-
-__global__ void gpu_square_matrix_mult(int *d_a, int *d_b, int *d_result, int n) 
-{
-    __shared__ int tile_a[BLOCK_SIZE][BLOCK_SIZE];
-    __shared__ int tile_b[BLOCK_SIZE][BLOCK_SIZE];
-
-    int row = blockIdx.y * BLOCK_SIZE + threadIdx.y;
-    int col = blockIdx.x * BLOCK_SIZE + threadIdx.x;
-    int tmp = 0;
-    int idx;
-
-    for (int sub = 0; sub < gridDim.x; ++sub) 
-    {
-        idx = row * n + sub * BLOCK_SIZE + threadIdx.x;
-        if(idx >= n*n)
-        {
-            // n may not divisible by BLOCK_SIZE
-            tile_a[threadIdx.y][threadIdx.x] = 0;
-        }
-        else
-        {
-            tile_a[threadIdx.y][threadIdx.x] = d_a[idx];
-        }
-
-        idx = (sub * BLOCK_SIZE + threadIdx.y) * n + col;
-        if(idx >= n*n)
-        {
-            tile_b[threadIdx.y][threadIdx.x] = 0;
-        }  
-        else
-        {
-            tile_b[threadIdx.y][threadIdx.x] = d_b[idx];
-        }
-        __syncthreads();
-
-        for (int k = 0; k < BLOCK_SIZE; ++k) 
-        {
-            tmp += tile_a[threadIdx.y][k] * tile_b[k][threadIdx.x];
-        }
-        __syncthreads();
-    }
-    if(row < n && col < n)
-    {
-        d_result[row * n + col] = tmp;
-    }
-}
-
-__global__ void gpu_matrix_transpose(int* mat_in, int* mat_out, unsigned int rows, unsigned int cols) 
-{
-    unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    unsigned int idy = blockIdx.y * blockDim.y + threadIdx.y;
-
-    if (idx < cols && idy < rows) 
-    {
-        unsigned int pos = idy * cols + idx;
-        unsigned int trans_pos = idx * rows + idy;
-        mat_out[trans_pos] = mat_in[pos];
-    }
-}
 
 void cpu_matrix_mult(int *h_a, int *h_b, int *h_result, int m, int n, int k) {
     for (int i = 0; i < m; ++i) 
@@ -209,6 +140,13 @@ int main(int argc, char const *argv[])
     int num;
     cin >> num;
     for(int i = 0; i < num; i++){
+        float gpu_total_time;
+        cudaEvent_t start_total, stop_total;
+        cudaEventCreate(&start_total);
+        cudaEventCreate(&stop_total);
+        cudaEventRecord(start_total,0);
+
+
         srand(3333);
         int m, n, k, A_size, IA_size, JA_size;
         int *A, *IA, *JA, *b_mat;
@@ -257,12 +195,21 @@ int main(int argc, char const *argv[])
         cudaThreadSynchronize();
         // time counting terminate
         cudaEventSynchronize(stop);
+        cudaEventSynchronize(stop_total);
         // cout << "gpu_ver" << endl;
         // cout << m << ' ' << k << ' ' << sizeof(h_cc) << ' ' << sizeof(h_c) << endl;
 
+        cudaEventRecord(stop_total, 0);
 
         cudaEventElapsedTime(&gpu_elapsed_time_ms, start, stop);
         printf("Time elapsed on matrix multiplication of %dx%d . %dx%d on GPU: %f ms.\n", m, n, n, k, gpu_elapsed_time_ms);
+
+        cudaEventElapsedTime(&gpu_total_time, start_total, stop_total);
+        printf("Time elapsed on matrix multiplication of %dx%d . %dx%d on GPU for total time: %f ms.\n", m, n, n, k, gpu_total_time);
+
+        cudaEventDestroy(start_total);
+        cudaEventDestroy(stop_total);
+
 
         /*
         // cpu version
