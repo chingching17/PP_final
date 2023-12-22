@@ -39,7 +39,6 @@ void cpu_matrix_mult(int *h_a, int *h_b, int *h_result, int m, int n, int k) {
 
 void construct_matrices(int *n_ptr, int *m_ptr, int *l_ptr,
                         int **a_mat_ptr, int **b_mat_ptr) {
-    std::cin >> *n_ptr >> *m_ptr >> *l_ptr;
 
     *a_mat_ptr = new int[*n_ptr * *m_ptr];
     *b_mat_ptr = new int[*m_ptr * *l_ptr];
@@ -63,16 +62,20 @@ int main(int argc, char const *argv[])
     cin.tie(0);
     int num;
     cin >> num;
+    cout << num << endl;
     for(int i = 0; i < num; i++){
+        int m, n, k;
+        srand(3333);
+        cin >> m >> n >> k;
+        cout << m << n << k;
+
         float gpu_total_time;
         cudaEvent_t start_total, stop_total;
         cudaEventCreate(&start_total);
         cudaEventCreate(&stop_total);
         cudaEventRecord(start_total,0);
 
-        int m, n, k;
-        srand(3333);
-        cin >> m >> n >> k;
+        
 
         int *h_a, *h_b, *h_c, *h_cc;
         cudaMallocHost((void **) &h_a, sizeof(int)*m*n);
