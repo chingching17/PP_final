@@ -21,64 +21,6 @@ __global__ void gpu_matrix_mult(int *a,int *b, int *c, int m, int n, int k)
     }
 } 
 
-__global__ void gpu_square_matrix_mult(int *d_a, int *d_b, int *d_result, int n) 
-{
-    __shared__ int tile_a[BLOCK_SIZE][BLOCK_SIZE];
-    __shared__ int tile_b[BLOCK_SIZE][BLOCK_SIZE];
-
-    int row = blockIdx.y * BLOCK_SIZE + threadIdx.y;
-    int col = blockIdx.x * BLOCK_SIZE + threadIdx.x;
-    int tmp = 0;
-    int idx;
-
-    for (int sub = 0; sub < gridDim.x; ++sub) 
-    {
-        idx = row * n + sub * BLOCK_SIZE + threadIdx.x;
-        if(idx >= n*n)
-        {
-            // n may not divisible by BLOCK_SIZE
-            tile_a[threadIdx.y][threadIdx.x] = 0;
-        }
-        else
-        {
-            tile_a[threadIdx.y][threadIdx.x] = d_a[idx];
-        }
-
-        idx = (sub * BLOCK_SIZE + threadIdx.y) * n + col;
-        if(idx >= n*n)
-        {
-            tile_b[threadIdx.y][threadIdx.x] = 0;
-        }  
-        else
-        {
-            tile_b[threadIdx.y][threadIdx.x] = d_b[idx];
-        }
-        __syncthreads();
-
-        for (int k = 0; k < BLOCK_SIZE; ++k) 
-        {
-            tmp += tile_a[threadIdx.y][k] * tile_b[k][threadIdx.x];
-        }
-        __syncthreads();
-    }
-    if(row < n && col < n)
-    {
-        d_result[row * n + col] = tmp;
-    }
-}
-
-__global__ void gpu_matrix_transpose(int* mat_in, int* mat_out, unsigned int rows, unsigned int cols) 
-{
-    unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    unsigned int idy = blockIdx.y * blockDim.y + threadIdx.y;
-
-    if (idx < cols && idy < rows) 
-    {
-        unsigned int pos = idy * cols + idx;
-        unsigned int trans_pos = idx * rows + idy;
-        mat_out[trans_pos] = mat_in[pos];
-    }
-}
 
 void cpu_matrix_mult(int *h_a, int *h_b, int *h_result, int m, int n, int k) {
     for (int i = 0; i < m; ++i) 
@@ -122,6 +64,12 @@ int main(int argc, char const *argv[])
     int num;
     cin >> num;
     for(int i = 0; i < num; i++){
+        float gpu_total_time;
+        cudaEvent_t start_total, stop_total;
+        cudaEventCreate(&start_total);
+        cudaEventCreate(&stop_total);
+        cudaEventRecord(start_total,0);
+
         int m, n, k;
         srand(3333);
         cin >> m >> n >> k;
@@ -157,7 +105,7 @@ int main(int argc, char const *argv[])
         // Launch kernel 
         if(m == n && n == k)
         {
-            gpu_square_matrix_mult<<<dimGrid, dimBlock>>>(d_a, d_b, d_c, n);    
+            // gpu_square_matrix_mult<<<dimGrid, dimBlock>>>(d_a, d_b, d_c, n);    
         }
         else
         {
@@ -171,10 +119,19 @@ int main(int argc, char const *argv[])
         cudaThreadSynchronize();
 
         cudaEventSynchronize(stop);
+        cudaEventSynchronize(stop_total);
+        cudaEventRecord(stop_total, 0);
+
 
         // compute time elapse on GPU computing
         cudaEventElapsedTime(&gpu_elapsed_time_ms, start, stop);
         printf("Time elapsed on matrix multiplication of %dx%d . %dx%d on GPU: %f ms.\n", m, n, n, k, gpu_elapsed_time_ms);
+
+        cudaEventElapsedTime(&gpu_total_time, start_total, stop_total);
+        printf("Time elapsed on matrix multiplication of %dx%d . %dx%d on GPU for total time: %f ms.\n", m, n, n, k, gpu_total_time);
+
+        cudaEventDestroy(start_total);
+        cudaEventDestroy(stop_total);
 /*
         // start the CPU version
         cudaEventRecord(start, 0);
