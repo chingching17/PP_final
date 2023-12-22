@@ -36,12 +36,13 @@ void matrix_multiply(const int n, const int m, const int l,
             result_mat[i * l + j] = 0;
         }
     }
-    #pragma omp parallel for collapse(3) reduction(+:result_mat[:n*l])
+    #pragma omp parallel for collapse(2) reduction(+:result_mat[:n*l])
     for (int i = 0; i < n; ++i) {
         for (int k = 0; k < m; ++k) {
-            for (int j = 0; j < l; ++j) {
-                result_mat[i * l + j] += a_mat[i * m + k] * b_mat[k * l + j];
-            }
+            // for (int j = 0; j < l; ++j) {
+            //     result_mat[i * l + j] += a_mat[i * m + k] * b_mat[k * l + j];
+            // }
+            result_mat[i] += a_mat[i * m + k] * b_mat[k];
         }
     }
 
@@ -51,6 +52,7 @@ void matrix_multiply(const int n, const int m, const int l,
     //     }
     //     printf("\n");
     // }
+
     delete[] result_mat;
 }
 

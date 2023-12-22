@@ -65,9 +65,10 @@ void matrix_multiply(const int n, const int m, const int l,
         std::memcpy(local_a, a_mat, sizeof(int) * a_size);
         std::memcpy(local_b, b_mat, sizeof(int) * m_len*l_len);
         for (int i = 0; i < n; ++i) {
-            for (int j = 0; j < l; ++j) {
-                result_mat[i * l + j] = 0;
-            }
+            // for (int j = 0; j < l; ++j) {
+            //     result_mat[i * l + j] = 0;
+            // }
+            result_mat[i] = 0;
         }
     }
     else{
@@ -78,9 +79,10 @@ void matrix_multiply(const int n, const int m, const int l,
 
     for(int i=0; i<block; ++i){
         for (int k = 0; k < m_len; ++k) {
-            for (int j = 0; j < l_len; ++j) {
-                local_result[i * l_len + j] += local_a[i * m_len + k] * local_b[k * l_len + j];
-            }
+            // for (int j = 0; j < l_len; ++j) {
+            //     local_result[i * l_len + j] += local_a[i * m_len + k] * local_b[k * l_len + j];
+            // }
+            local_result[i] += local_a[i * m_len + k] * local_b[k];
         }        
     }
 
@@ -91,9 +93,10 @@ void matrix_multiply(const int n, const int m, const int l,
             int begin=world_size*block;
             for (int i = begin; i < n; ++i) {
                 for (int k = 0; k < m; ++k) {
-                    for (int j = 0; j < l; ++j) {
-                        result_mat[i * l + j] += a_mat[i * m + k] * b_mat[k * l + j];
-                    }
+                    // for (int j = 0; j < l; ++j) {
+                    //     result_mat[i * l + j] += a_mat[i * m + k] * b_mat[k * l + j];
+                    // }
+                    result_mat[i] += a_mat[i * m + k] * b_mat[k];
                 }
             }            
         }
@@ -107,6 +110,7 @@ void matrix_multiply(const int n, const int m, const int l,
     //         printf("\n");
     //     }
     // }
+
     delete[] local_a;
     delete[] local_b;
     delete[] local_result;

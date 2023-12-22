@@ -39,15 +39,20 @@ void construct_matrices(int *n_ptr, int *m_ptr, int *l_ptr,
 void *matrix_multiply_thread(void *arg) {
     ThreadData *data = reinterpret_cast<ThreadData*>(arg);
 
+    // for (int i = data->start; i < data->end; ++i) {
+    //     for (int j = 0; j < data->l; ++j) {
+    //         data->result_mat[i * data->l + j] = 0;
+    //         for (int k = 0; k < data->m; ++k) {
+    //             data->result_mat[i * data->l + j] += data->a_mat[i * data->m + k] * data->b_mat[k * data->l + j];
+    //         }
+    //     }
+    // }
     for (int i = data->start; i < data->end; ++i) {
-        for (int j = 0; j < data->l; ++j) {
-            data->result_mat[i * data->l + j] = 0;
-            for (int k = 0; k < data->m; ++k) {
-                data->result_mat[i * data->l + j] += data->a_mat[i * data->m + k] * data->b_mat[k * data->l + j];
-            }
+        data->result_mat[i] = 0;
+        for (int k = 0; k < data->m; ++k) {
+            data->result_mat[i] += data->a_mat[i * data->m + k] * data->b_mat[k];
         }
     }
-
     pthread_exit(NULL);
 }
 
@@ -101,6 +106,7 @@ int main() {
         //     }
         //     printf("\n");
         // }
+
         destruct_matrices(a_mat, b_mat);
         delete[] result_mat;
         auto t3 = std::chrono::steady_clock::now();
