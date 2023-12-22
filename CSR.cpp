@@ -41,28 +41,39 @@ auto s1 = std::chrono::steady_clock::now();
 // Generate the three vectors A, IA, JA 
 void sparesify(const matrix& M, ofstream &output)
 {
-	s0 = std::chrono::steady_clock::now();
+	
 	int m = M.size();
 	int n = M[0].size(), i, j;
-	vi A;
-	vi IA = { 0 }; // IA matrix has N+1 rows
-	vi JA;
+	// vi A;
+	// vi IA = { 0 }; // IA matrix has N+1 rows
+	// vi JA;
+	int *A=new int[m*n];
+	int *IA=new int[m+1];
+	int *JA=new int[m*n];
 	int NNZ = 0;
+	int indexA=0, indexIA=0, indexJA=0;
 
+	s0 = std::chrono::steady_clock::now();
 	for (i = 0; i < m; i++) {
 		for (j = 0; j < n; j++) {
 			if (M[i][j] != 0) {
-				A.push_back(M[i][j]);
-				JA.push_back(j);
-
+				// A.push_back(M[i][j]);
+				// JA.push_back(j);
+				A[indexA]=M[i][j];
+				++indexA;
+				JA[indexJA]=j;
+				++indexJA;
 				// Count Number of Non Zero 
 				// Elements in row i
 				NNZ++;
 			}
 		}
-		IA.push_back(NNZ);
+		//IA.push_back(NNZ);
+		IA[indexIA]=NNZ;
+		++indexIA;
 	}
 	s1 = std::chrono::steady_clock::now();
+
 	// printMatrix(M);
 	// printVector(A, (char*)"A = ");
 	// printVector(IA, (char*)"IA = ");
@@ -70,19 +81,34 @@ void sparesify(const matrix& M, ofstream &output)
 	
 
 	output << "A = [ ";
-	for(auto n:A)
-		output << n << " ";
+	for(int i=0; i<=indexA; i++)
+		output << A[i] << " ";
 	output << "]" << endl;
 
 	output << "IA = [ ";
-	for(auto n:IA)
-		output << n << " ";
+	for(int i=0; i<=indexIA; i++)
+		output << IA[i] << " ";
 	output << "]" << endl;
 
 	output << "JA = [ ";
-	for(auto n:JA)
-		output << n << " ";
+	for(int i=0; i<=indexJA; i++)
+		output << JA[i] << " ";
 	output << "]" << endl;
+
+	// output << "A = [ ";
+	// for(auto n:A)
+	// 	output << n << " ";
+	// output << "]" << endl;
+
+	// output << "IA = [ ";
+	// for(auto n:IA)
+	// 	output << n << " ";
+	// output << "]" << endl;
+
+	// output << "JA = [ ";
+	// for(auto n:JA)
+	// 	output << n << " ";
+	// output << "]" << endl;
 }
 
 // Driver code
